@@ -10,18 +10,31 @@ window.CONFIG = {
   ABOUT_TEXT: "Calistenia Pro es un programa de calistenia militar de 21 días diseñado para construir fuerza real, resistencia extrema y disciplina. Entrenás con tu propio cuerpo, sin gimnasio, sin excusas.",
 
   // Video placeholder: TODO reemplazar por los 63 videos reales de cada día.
-  // Por ahora, igual que en el original, todos los días usan el mismo video.
+  // Por ahora, igual que en el original, todos los días usan el mismo video
+  // (los días 2+ están bloqueados en el original hasta completar el anterior,
+  // así que no pude verificar si tienen video propio — dejo el mismo placeholder
+  // para los 63 hasta que sumes los reales).
   PLACEHOLDER_VIDEO_ID: "ouFzwHY9dmo",
+  PLACEHOLDER_VIDEO_THUMB: "https://i.ytimg.com/vi/ouFzwHY9dmo/hqdefault.jpg",
 
-  // Plantilla semanal de 7 días que se repite (título + duración en min).
+  // Cita motivacional que se muestra en el Home una vez completado el test.
+  MOTIVATIONAL_QUOTE: "La fuerza no nace en un gimnasio. Nace en tu disciplina.",
+  COPYRIGHT_FOOTER: "Calistenia Pro. Uso personal exclusivo.",
+
+  // Plantilla semanal de 7 días que se repite (título + duración en min + desc).
+  // OJO: "desc" de "Rutina de Fuerza Total" es la real (la vi en la tarjeta del
+  // día en el Home). Las otras 6 son una aproximación mía razonable: los días
+  // 2 a 7 están bloqueados en el original (no se puede avanzar sin completar
+  // el día 1, y ese "marcar completado" no persiste ahí) así que no pude ver
+  // sus descripciones reales — si las tenés, pasámelas y las cambio.
   DAY_TEMPLATE: [
-    { t: "Rutina de Fuerza Total", min: 15 },
-    { t: "Resistencia y Potencia", min: 11 },
-    { t: "Cardio Táctico", min: 7 },
-    { t: "Core de Acero", min: 10 },
-    { t: "Tren Inferior Explosivo", min: 10 },
-    { t: "Fuerza Funcional", min: 10 },
-    { t: "Recuperación Activa", min: 15 },
+    { t: "Rutina de Fuerza Total", min: 15, desc: "Entrenamiento completo de fuerza con peso corporal." },
+    { t: "Resistencia y Potencia", min: 11, desc: "Circuito de resistencia muscular y potencia explosiva." },
+    { t: "Cardio Táctico", min: 7, desc: "Cardio de alta intensidad, estilo entrenamiento militar." },
+    { t: "Core de Acero", min: 10, desc: "Trabajo de core completo para blindar tu zona media." },
+    { t: "Tren Inferior Explosivo", min: 10, desc: "Piernas y glúteos con énfasis en potencia explosiva." },
+    { t: "Fuerza Funcional", min: 10, desc: "Movimientos funcionales que suman fuerza real, no de gimnasio." },
+    { t: "Recuperación Activa", min: 15, desc: "Movilidad y recuperación activa para bajar la carga sin frenar." },
   ],
 
   PHASES: [

@@ -37,11 +37,33 @@
       const tpl = CONFIG.DAY_TEMPLATE[(i - 1) % 7];
       const week = Math.ceil(i / 7);
       const phaseIdx = week <= 3 ? 0 : week <= 6 ? 1 : 2;
-      days.push({ num: i, t: tpl.t, min: tpl.min, week, phaseIdx });
+      days.push({ num: i, t: tpl.t, min: tpl.min, desc: tpl.desc, week, phaseIdx });
     }
     return days;
   }
   const DAYS = buildDays();
+
+  // Día "de hoy" = el primero que todavía no está completado (o el último, si ya se completaron los 63).
+  function currentDayNum(doneSet) {
+    for (let i = 1; i <= 63; i++) if (!doneSet.has(i)) return i;
+    return 63;
+  }
+  function currentPhaseIdx(dayNum) {
+    const d = DAYS.find(x => x.num === dayNum);
+    return d ? d.phaseIdx : 0;
+  }
+  // Anillo circular de progreso (SVG), en base al % completado.
+  function progressRingSVG(pct, big, small) {
+    const r = 54, c = 2 * Math.PI * r;
+    const offset = c * (1 - pct / 100);
+    return '<svg width="140" height="140" viewBox="0 0 120 120" style="display:block;margin:0 auto">' +
+      '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="hsl(var(--secondary))" stroke-width="8"/>' +
+      '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="hsl(var(--primary))" stroke-width="8" stroke-linecap="round" ' +
+      'stroke-dasharray="' + c + '" stroke-dashoffset="' + offset + '" transform="rotate(-90 60 60)"/>' +
+      '<text x="60" y="58" text-anchor="middle" font-family="Oswald,sans-serif" font-weight="800" font-size="30" fill="hsl(var(--foreground))">' + big + '</text>' +
+      '<text x="60" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="hsl(var(--muted-foreground))">' + small + '</text>' +
+      '</svg>';
+  }
 
   function setActiveNav() {
     const path = location.pathname === '' ? '/' : location.pathname;
@@ -69,15 +91,53 @@
 
     if (quiz.done) {
       const nivel = CONFIG.NIVEL_BY_EXPERIENCIA[quiz.answers.experiencia] || 'principiante';
-      html += '<div class="card" style="text-align:center">' +
-        '<div class="quiz-icon">✅</div>' +
-        '<h2 class="quiz-title">¡Test completado!</h2>' +
-        '<p class="quiz-sub">Tu nivel: <b style="color:hsl(var(--primary));text-transform:uppercase">' + esc(nivel) + '</b></p>' +
-        '<a class="btn btn-primary" href="/programa" style="margin-top:14px;display:block">Ir a mi programa</a>' +
-        '<button class="btn btn-ghost" id="retryQuiz" style="margin-top:10px">Repetir test</button>' +
-        '</div><p class="foot-note">Plataforma oficial ' + esc(CONFIG.BRAND) + '</p>';
+      const progress = load(LS.progress, { completedDays: [] });
+      const doneSet = new Set(progress.completedDays);
+      const totalDone = doneSet.size;
+      const pct = Math.round((totalDone / 63) * 100);
+      const todayNum = currentDayNum(doneSet);
+      const today = DAYS.find(d => d.num === todayNum);
+      const phase = CONFIG.PHASES[currentPhaseIdx(todayNum)];
+      const todayDone = doneSet.has(todayNum);
+
+      html = '<h1 class="brand-h1">' + esc(CONFIG.BRAND) + '</h1>' +
+        '<p class="brand-sub">' + esc(CONFIG.TAGLINE) + '</p>' +
+        '<div style="text-align:center;margin-bottom:14px"><span class="tag" style="font-size:12px">NIVEL: <b style="color:hsl(var(--primary))">' + esc(nivel.toUpperCase()) + '</b></span></div>' +
+        '<p style="text-align:center;color:hsl(var(--muted-foreground));font-style:italic;font-size:13.5px;margin-bottom:16px">' + esc(CONFIG.MOTIVATIONAL_QUOTE) + '</p>' +
+        '<p style="text-align:center;color:hsl(var(--primary));font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:14px">FASE ' + (phase && CONFIG.PHASES.indexOf(phase) + 1) + ' – ' + esc(phase ? phase.name : '') + '</p>' +
+        '<div style="display:flex;gap:10px;margin-bottom:24px">' +
+        '<button class="btn btn-secondary" id="retryQuiz" style="flex:1;font-size:12.5px">🔄 Rehacer test inicial</button>' +
+        '<button class="btn btn-secondary" id="undoDay" style="flex:1;font-size:12.5px"' + (totalDone === 0 ? ' disabled' : '') + '>↩ Volver 1 día atrás</button>' +
+        '</div>' +
+        '<div style="margin-bottom:8px">' + progressRingSVG(pct, totalDone, '/63') + '</div>' +
+        '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:22px">Has completado ' + totalDone + ' de 63 días</p>' +
+        '<div class="card" style="text-align:center">' +
+        '<span class="pill completo" style="margin-bottom:12px;display:inline-block">DÍA ' + todayNum + ' DE 63</span>' +
+        '<h2 style="font-size:20px;text-transform:uppercase;margin-bottom:8px">' + esc(today.t) + '</h2>' +
+        '<p style="color:hsl(var(--muted-foreground));font-size:13.5px;margin-bottom:12px">' + esc(today.desc || '') + '</p>' +
+        '<p style="color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:16px">🕐 ' + today.min + ' min</p>' +
+        '<button class="btn btn-primary" id="startTraining" style="margin-bottom:10px">▷ Iniciar entrenamiento</button>' +
+        '<button class="btn btn-secondary" id="markTodayDone"' + (todayDone ? ' disabled' : '') + '>' + (todayDone ? '✓ Completado' : '✓ Marcar como completado') + '</button>' +
+        '</div>' +
+        '<p class="foot-note">' + esc(CONFIG.COPYRIGHT_FOOTER) + '<br>Plataforma oficial. Acceso individual.</p>';
       view.innerHTML = html;
       document.getElementById('retryQuiz').onclick = () => { save(LS.quiz, { step: 0, answers: {}, done: false }); renderHome(); };
+      const undoBtn = document.getElementById('undoDay');
+      if (undoBtn) undoBtn.onclick = () => {
+        const p = load(LS.progress, { completedDays: [] });
+        p.completedDays.sort((a, b) => a - b);
+        p.completedDays.pop();
+        save(LS.progress, p);
+        renderHome();
+      };
+      document.getElementById('startTraining').onclick = () => openDayModal(todayNum);
+      const markBtn = document.getElementById('markTodayDone');
+      if (markBtn) markBtn.onclick = () => {
+        const p = load(LS.progress, { completedDays: [] });
+        if (!p.completedDays.includes(todayNum)) p.completedDays.push(todayNum);
+        save(LS.progress, p);
+        renderHome();
+      };
       return;
     }
 
@@ -166,15 +226,20 @@
     const day = DAYS.find(d => d.num === num);
     const progress = load(LS.progress, { completedDays: [] });
     const done = progress.completedDays.includes(num);
+    const ytUrl = 'https://www.youtube.com/watch?v=' + CONFIG.PLACEHOLDER_VIDEO_ID;
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = '<div class="modal-box">' +
-      '<div class="modal-top"><button class="btn-ghost" id="mBack">‹ Volver</button><button class="btn-ghost" id="mClose">Cerrar ✕</button></div>' +
-      '<h2 style="font-size:18px;text-transform:uppercase">Día ' + num + '</h2>' +
-      '<p style="color:hsl(var(--muted-foreground));font-size:13px;margin:2px 0 14px">' + esc(day.t) + ' · ' + day.min + ' min</p>' +
-      '<div class="video-wrap"><iframe src="https://www.youtube.com/embed/' + CONFIG.PLACEHOLDER_VIDEO_ID + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>' +
-      '<a class="btn btn-secondary" style="margin-bottom:10px;display:block" href="https://www.youtube.com/watch?v=' + CONFIG.PLACEHOLDER_VIDEO_ID + '" target="_blank" rel="noopener">Abrir en YouTube</a>' +
-      '<button class="btn btn-primary" id="mComplete">' + (done ? '✓ Completado' : 'Marcar como completado') + '</button>' +
+      '<div class="modal-top"><div><span class="tag" style="margin-right:6px">DÍA ' + num + '</span><span class="tag">' + day.min + ' min</span></div><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
+      '<h2 style="font-size:20px;text-transform:uppercase;margin:14px 0 12px">' + esc(day.t) + '</h2>' +
+      '<a href="' + ytUrl + '" target="_blank" rel="noopener" class="video-wrap" style="display:block;position:relative">' +
+      '<img src="' + CONFIG.PLACEHOLDER_VIDEO_THUMB + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' +
+      '<span style="position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.65);color:#fff;padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px">▶ Mirar en YouTube</span>' +
+      '</a>' +
+      '<a class="btn btn-secondary" style="margin:14px 0 10px;display:block" href="' + ytUrl + '" target="_blank" rel="noopener">↗ Abrir en YouTube</a>' +
+      '<button class="btn btn-secondary" id="mComplete" style="margin-bottom:14px">' + (done ? '✓ Completado' : 'Marcar como completado') + '</button>' +
+      '<button class="btn-ghost" id="mBack" style="display:block;margin:0 auto">Volver</button>' +
+      '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:11.5px;margin-top:16px">' + esc(CONFIG.COPYRIGHT_FOOTER) + '</p>' +
       '</div>';
     document.body.appendChild(overlay);
     function closeModal() { overlay.remove(); }
@@ -185,7 +250,7 @@
       if (!p.completedDays.includes(num)) p.completedDays.push(num);
       save(LS.progress, p);
       closeModal();
-      renderPrograma();
+      render();
     };
   }
 

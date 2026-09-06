@@ -1,0 +1,13 @@
+{
+  "name": "sistema-forja",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App Sistema Forja — clon funcional de Sistema Titanio (programa de calistenia militar de 63 dias + 6 bonos interactivos)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

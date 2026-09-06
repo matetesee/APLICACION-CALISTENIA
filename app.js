@@ -1,5 +1,5 @@
 // ============================================================
-// APP — Sistema Forja (motor)
+// APP — Calistenia Pro (motor)
 // Clon funcional de Sistema Titanio: 4 pestañas + 63 días + 6 bonos.
 // Vanilla JS, sin frameworks. Estado persistido en localStorage.
 // Navegación por pestañas = recarga de página normal (server.js hace

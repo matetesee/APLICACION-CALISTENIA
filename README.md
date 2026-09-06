@@ -1,4 +1,4 @@
-# Sistema Forja — App de Calistenia Militar
+# Calistenia Pro — App de Calistenia Militar
 
 Clon funcional de Sistema Titanio: app de 63 días (3 fases) + 6 bonos interactivos,
 reconstruida como código propio (vanilla JS, sin frameworks) manteniendo el mismo
@@ -35,7 +35,7 @@ El original (Sistema Titanio) tenía dos bugs reales que acá quedaron **arregla
   `videoId` a cada día en el array `DAYS` (ver `buildDays()` en `app.js`) o al
   `DAY_TEMPLATE`.
 - **Email de soporte:** `CONFIG.SUPPORT_EMAIL` en `config.js` está en
-  `soporte@sistemaforja.com` como placeholder — cambialo por el real.
+  `soporte@calisteniapro.com` como placeholder — cambialo por el real.
 - **"Progreso estimado" (Bono 2):** el original mostraba un % que no pude
   reconstruir con exactitud (los mismos inputs daban valores distintos en
   distintas pruebas). Acá usé una fórmula propia razonable basada en la

@@ -1,13 +1,13 @@
 // ============================================================
-// CONFIG — Sistema Forja
+// CONFIG — Calistenia Pro
 // Clon funcional de Sistema Titanio. Todo el contenido vive acá.
 // ============================================================
 window.CONFIG = {
-  BRAND: "Sistema Forja",
-  BRAND_SHORT: "Forja",
+  BRAND: "Calistenia Pro",
+  BRAND_SHORT: "Calistenia Pro",
   TAGLINE: "63 días · 3 fases",
-  SUPPORT_EMAIL: "soporte@sistemaforja.com", // TODO: cambiar por el email real de soporte
-  ABOUT_TEXT: "Sistema Forja es un programa de calistenia militar de 21 días diseñado para construir fuerza real, resistencia extrema y disciplina. Entrenás con tu propio cuerpo, sin gimnasio, sin excusas.",
+  SUPPORT_EMAIL: "soporte@calisteniapro.com", // TODO: cambiar por el email real de soporte
+  ABOUT_TEXT: "Calistenia Pro es un programa de calistenia militar de 21 días diseñado para construir fuerza real, resistencia extrema y disciplina. Entrenás con tu propio cuerpo, sin gimnasio, sin excusas.",
 
   // Video placeholder: TODO reemplazar por los 63 videos reales de cada día.
   // Por ahora, igual que en el original, todos los días usan el mismo video.
@@ -25,9 +25,9 @@ window.CONFIG = {
   ],
 
   PHASES: [
-    { name: "Fundamentos Forja", desc: "Construí las bases de tu fuerza y disciplina con movimientos fundamentales.", weekStart: 1, weekEnd: 3 },
+    { name: "Fundamentos Pro", desc: "Construí las bases de tu fuerza y disciplina con movimientos fundamentales.", weekStart: 1, weekEnd: 3 },
     { name: "Intensificación", desc: "Aumentá la intensidad y desafiá tus límites con entrenamientos más exigentes.", weekStart: 4, weekEnd: 6 },
-    { name: "Dominio Forja", desc: "Dominá cada ejercicio y consolidá tu transformación definitiva.", weekStart: 7, weekEnd: 9 },
+    { name: "Dominio Pro", desc: "Dominá cada ejercicio y consolidá tu transformación definitiva.", weekStart: 7, weekEnd: 9 },
   ],
 
   // ---------- Test inicial (Home) ----------
@@ -70,7 +70,7 @@ window.CONFIG = {
   // ---------- Tu Plan: 6 bonos ----------
   BONOS: [
     { n: 1, type: "PDF IMPORTADO", title: "Bebidas Quema Grasa", desc: "Biblioteca interactiva de recetas termogénicas" },
-    { n: 2, type: "INTERACTIVO", title: "Plan de Progreso Forja", desc: "Herramienta interactiva de seguimiento" },
+    { n: 2, type: "INTERACTIVO", title: "Plan de Progreso", desc: "Herramienta interactiva de seguimiento" },
     { n: 3, type: "INTERACTIVO", title: "Protocolo de Recuperación", desc: "Recomendaciones según tu estado físico" },
     { n: 4, type: "TRACKER", title: "Tracker de Disciplina", desc: "Registro diario de hábitos por fecha real" },
     { n: 5, type: "INTERACTIVO", title: "Protocolo del Combustible Negro", desc: "Ingeniería alimentaria táctica para máximo rendimiento" },

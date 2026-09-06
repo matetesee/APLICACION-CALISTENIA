@@ -3,5 +3,5 @@
   <path d="M96 26 L146 44 V90 C146 126 126 150 96 166 C66 150 46 126 46 90 V44 Z"
         fill="none" stroke="#4d8a4d" stroke-width="6"/>
   <text x="96" y="118" font-family="Arial, sans-serif" font-weight="900" font-size="72"
-        fill="#4d8a4d" text-anchor="middle">F</text>
+        fill="#4d8a4d" text-anchor="middle">P</text>
 </svg>

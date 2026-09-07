@@ -5,7 +5,7 @@
 // dejarla lista la próxima vez. Si algún día cambia mucho el contenido y
 // hace falta forzar que todos bajen la versión nueva, alcanza con subir el
 // número de CACHE_NAME de más abajo.
-const CACHE_NAME = 'calistenia-pro-v1';
+const CACHE_NAME = 'calistenia-pro-v2';
 const APP_SHELL = [
   '/', '/index.html', '/app.js', '/config.js', '/manifest.json',
   '/icon.svg', '/icon-192.png', '/icon-512.png',

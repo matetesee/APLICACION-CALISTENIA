@@ -9,7 +9,10 @@
 <meta name="theme-color" content="#111311">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon.svg">
+<!-- iOS no soporta SVG en apple-touch-icon: si se lo dejamos, Safari
+     ignora este ícono y termina usando el que encuentre en el manifest, que
+     por eso HAY que mantener bien actualizado también (ver manifest.json). -->
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box}

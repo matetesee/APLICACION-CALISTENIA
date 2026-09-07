@@ -6,7 +6,7 @@ window.CONFIG = {
   BRAND: "Calistenia Pro",
   BRAND_SHORT: "Calistenia Pro",
   TAGLINE: "63 días · 3 fases",
-  SUPPORT_EMAIL: "soporte@calisteniapro.com", // TODO: cambiar por el email real de soporte
+  SUPPORT_EMAIL: "plenitudsaludable@gmail.com",
   ABOUT_TEXT: "Calistenia Pro es un programa de calistenia militar de 21 días diseñado para construir fuerza real, resistencia extrema y disciplina. Entrenás con tu propio cuerpo, sin gimnasio, sin excusas.",
 
   // Video placeholder: TODO reemplazar por los 63 videos reales de cada día.

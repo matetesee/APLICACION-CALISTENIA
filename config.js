@@ -7,6 +7,21 @@ window.CONFIG = {
   BRAND_SHORT: "Calistenia Pro",
   TAGLINE: "63 días · 3 fases",
   SUPPORT_EMAIL: "plenitudsaludable@gmail.com",
+  // Link del quiz de venta, se usa al compartir la racha (CTA "arrancá tu entrenamiento").
+  QUIZ_URL: "https://calisteniapro.up.railway.app",
+
+  // Idiomas que se muestran en Configuración. Por ahora todo el contenido
+  // (config.js completo) solo está escrito en español -> únicamente "es"
+  // funciona de verdad; el resto queda listado pero avisa "todavía no está
+  // listo" al tocarlo (ver openSettingsModal() en app.js). Agregar un idioma
+  // real implica traducir TODO este archivo (recetas, días, bonos, info).
+  LANGUAGES: [
+    { code: "es", label: "Español", flag: "🇪🇸" },
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "pt", label: "Português", flag: "🇧🇷" },
+    { code: "zh", label: "中文", flag: "🇨🇳" },
+    { code: "ja", label: "日本語", flag: "🇯🇵" },
+  ],
   ABOUT_TEXT: "Calistenia Pro es un programa de calistenia militar de 21 días diseñado para construir fuerza real, resistencia extrema y disciplina. Entrenás con tu propio cuerpo, sin gimnasio, sin excusas.",
 
   // Video placeholder: TODO reemplazar por los 63 videos reales de cada día.

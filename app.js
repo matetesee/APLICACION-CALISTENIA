@@ -20,6 +20,8 @@
     streak: 'forja_streak',
     achievements: 'forja_achievements',
     progressPhotos: 'forja_progress_photos',
+    theme: 'forja_theme',
+    lang: 'forja_lang',
   };
   function load(key, fallback) {
     try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
@@ -76,6 +78,15 @@
   // PERFIL, RACHA Y LOGROS
   // ============================================================
 
+  // Tema claro/oscuro: se guarda en localStorage y se aplica con un atributo
+  // en <html> (ver el bloque html[data-theme="light"] en index.html). Oscuro
+  // sigue siendo el default de toda la vida si nunca se tocó el ajuste.
+  function applyTheme(theme) {
+    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+    save(LS.theme, theme);
+  }
+
   // Header persistente (foto + nombre + racha), visible arriba en las 4
   // pestañas. Se vuelve a pintar al principio de cada render*() de pestaña
   // y cada vez que cambia algo (foto, nombre, racha).
@@ -92,7 +103,8 @@
     header.innerHTML =
       '<div class="avatar-circle" id="hdrAvatar">' + (profile.photo ? '<img src="' + profile.photo + '" alt="">' : '🙂') + '</div>' +
       '<div class="top-header-name" id="hdrName"><b>Hola, ' + (profile.name ? esc(profile.name) : 'Recluta') + ' 👋</b><span>Bienvenido de nuevo</span></div>' +
-      '<button class="streak-pill" id="hdrStreak" title="Compartir mi racha">🔥 ' + displayStreak + '</button>';
+      '<button class="streak-pill" id="hdrStreak" title="Compartir mi racha">🔥 ' + displayStreak + '</button>' +
+      '<button class="gear-btn" id="hdrGear" title="Configuración">⚙️</button>';
     document.getElementById('hdrAvatar').onclick = async () => {
       const file = await pickImageFile();
       if (!file) return;
@@ -103,6 +115,40 @@
     };
     document.getElementById('hdrName').onclick = () => openProfileModal(false);
     document.getElementById('hdrStreak').onclick = shareProgress;
+    document.getElementById('hdrGear').onclick = openSettingsModal;
+  }
+
+  // Modal de Configuración: editar perfil, tema claro/oscuro e idioma.
+  function openSettingsModal() {
+    const theme = load(LS.theme, 'dark');
+    const lang = load(LS.lang, 'es');
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = '<div class="modal-box">' +
+      '<div class="modal-top"><h2 style="font-size:17px;text-transform:uppercase">⚙️ Configuración</h2><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
+      '<button class="btn btn-secondary" id="sEditProfile" style="margin-bottom:10px">👤 Editar nombre y foto</button>' +
+      '<p class="settings-label">Apariencia</p>' +
+      '<div class="seg-row">' +
+      '<button class="seg-btn' + (theme !== 'light' ? ' sel' : '') + '" data-theme="dark">🌙 Oscuro</button>' +
+      '<button class="seg-btn' + (theme === 'light' ? ' sel' : '') + '" data-theme="light">☀️ Claro</button>' +
+      '</div>' +
+      '<p class="settings-label">Idioma</p>' +
+      CONFIG.LANGUAGES.map(l => '<div class="lang-row" data-lang="' + l.code + '"><span>' + l.flag + ' ' + esc(l.label) + '</span>' + (lang === l.code ? '<span class="chk">✓</span>' : '') + '</div>').join('') +
+      '<p style="color:hsl(var(--muted-foreground));font-size:11.5px;margin-top:6px">Por ahora la app está solo en español. Estamos sumando más idiomas — avisale al soporte cuál necesitás primero.</p>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#mClose').onclick = () => overlay.remove();
+    overlay.querySelector('#sEditProfile').onclick = () => { overlay.remove(); openProfileModal(false); };
+    overlay.querySelectorAll('.seg-btn').forEach(b => {
+      b.onclick = () => { applyTheme(b.dataset.theme); overlay.remove(); openSettingsModal(); };
+    });
+    overlay.querySelectorAll('.lang-row').forEach(r => {
+      r.onclick = () => {
+        if (r.dataset.lang !== 'es') { alert('Ese idioma todavía no está listo, ¡pronto!'); return; }
+        save(LS.lang, r.dataset.lang);
+        overlay.remove(); openSettingsModal();
+      };
+    });
   }
 
   // Modal para elegir nombre + foto. isOnboarding=true la primera vez que se
@@ -199,7 +245,8 @@
     const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
     const today = todayStr();
     const displayStreak = streak.lastDate && daysBetween(streak.lastDate, today) <= 1 ? streak.count : 0;
-    const text = '🔥 Llevo ' + displayStreak + ' día' + (displayStreak === 1 ? '' : 's') + ' de racha entrenando con ' + CONFIG.BRAND + '. ¡Ya completé ' + totalDone + ' de 63 días de mi transformación! 💪';
+    const text = '🔥 Llevo ' + displayStreak + ' día' + (displayStreak === 1 ? '' : 's') + ' de racha entrenando con ' + CONFIG.BRAND + '. ¡Ya completé ' + totalDone + ' de 63 días de mi transformación! 💪' +
+      '\n\n¿Querés arrancar tu propio entrenamiento? 👉 ' + CONFIG.QUIZ_URL;
     function fallbackCopy(txt) {
       const ta = document.createElement('textarea');
       ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -1052,6 +1099,8 @@
       t.onclick = () => { view.querySelectorAll('[data-os]').forEach(x => x.classList.remove('sel')); t.classList.add('sel'); paintSteps(t.dataset.os); };
     });
   }
+
+  applyTheme(load(LS.theme, 'dark'));
 
   // Primer uso: todavía no hay nombre guardado -> pedimos perfil antes de
   // mostrar el contenido. Si ya existe, arranca directo.

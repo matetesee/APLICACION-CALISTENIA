@@ -22,11 +22,22 @@
   --accent:120 30% 22%; --destructive:0 62% 50%;
   --radius:.75rem;
 }
+/* Tema claro: se activa poniendo data-theme="light" en <html> (ver
+   applyTheme() en app.js). Sin ese atributo (o con "dark") se usa el
+   oscuro de arriba, que sigue siendo el default de toda la vida. */
+html[data-theme="light"]{
+  --background:100 20% 97%; --foreground:120 15% 12%;
+  --card:0 0% 100%; --card-foreground:120 15% 12%;
+  --border:120 10% 85%; --muted:120 15% 93%; --muted-foreground:120 6% 40%;
+  --secondary:120 12% 92%; --secondary-foreground:120 15% 20%;
+  --primary:120 45% 32%; --primary-foreground:0 0% 100%;
+  --accent:120 25% 85%; --destructive:0 65% 45%;
+}
 html,body{margin:0;background:hsl(var(--background));color:hsl(var(--foreground));min-height:100%}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:'Oswald',sans-serif;margin:0}
 p{margin:0}
-button{font-family:inherit}
+button{font-family:inherit;color:inherit}
 a{color:inherit;text-decoration:none}
 #app{max-width:520px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:76px}
 #view{padding:20px 18px 32px;animation:fadeIn .3s ease}
@@ -106,7 +117,7 @@ a{color:inherit;text-decoration:none}
 /* ===== bonos ===== */
 .bono-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius);padding:14px;margin-bottom:12px;cursor:pointer}
 .bono-num{width:38px;height:38px;border-radius:10px;background:hsla(var(--primary)/.15);color:hsl(var(--primary));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none}
-.bono-title{font-weight:700;font-size:14.5px;margin:3px 0 2px}
+.bono-title{font-weight:700;font-size:14.5px;margin:3px 0 2px;color:hsl(var(--foreground))}
 .bono-desc{color:hsl(var(--muted-foreground));font-size:12.5px}
 .filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
 .recipe-row{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius);padding:14px;margin-bottom:10px}
@@ -176,6 +187,17 @@ a{color:inherit;text-decoration:none}
 .top-header-name b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-header-name span{font-size:11px;color:hsl(var(--muted-foreground))}
 .streak-pill{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;background:hsla(var(--primary)/.15);color:hsl(var(--primary));font-weight:800;font-size:13px;flex:none;border:none;cursor:pointer;font-family:inherit}
+.gear-btn{width:34px;height:34px;border-radius:50%;border:1px solid hsl(var(--border));background:hsl(var(--secondary));display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;cursor:pointer}
+
+/* ===== configuración ===== */
+.seg-row{display:flex;gap:8px;margin-bottom:18px}
+.seg-btn{flex:1;padding:10px;border-radius:var(--radius);border:1px solid hsl(var(--border));background:hsl(var(--secondary));color:hsl(var(--secondary-foreground));font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+.seg-btn.sel{background:hsl(var(--primary));color:#fff;border-color:hsl(var(--primary))}
+.lang-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid hsl(var(--border));cursor:pointer}
+.lang-row:last-child{border-bottom:none}
+.lang-row span{font-size:14px}
+.lang-row .chk{color:hsl(var(--primary));font-weight:800}
+.settings-label{font-size:12px;font-weight:700;letter-spacing:.05em;color:hsl(var(--muted-foreground));text-transform:uppercase;margin:18px 0 8px;text-align:left}
 
 /* ===== onboarding / editar perfil ===== */
 .avatar-picker{width:84px;height:84px;border-radius:50%;margin:0 auto 16px;background:hsl(var(--secondary));display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;border:2px dashed hsl(var(--border));overflow:hidden;position:relative}

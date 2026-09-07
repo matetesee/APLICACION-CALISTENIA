@@ -718,12 +718,40 @@
     html += '<div class="info-sec"><h3>Recomendaciones</h3><ul>' + CONFIG.INFO_RECOMENDACIONES.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul></div>';
     html += '<div class="info-sec"><h3>¿Qué necesito?</h3><p>Solo tu cuerpo, un espacio libre (puede ser tu casa, un parque, cualquier lugar) y compromiso. No se necesitan pesas, bandas ni equipo especial.</p></div>';
     html += '<div class="info-sec"><h3>Soporte</h3><p>¿Tenés dudas o necesitás ayuda? Escribinos.</p>' +
-      '<a class="btn btn-secondary" style="margin-top:10px;display:block" href="mailto:' + CONFIG.SUPPORT_EMAIL + '">Contactar Soporte</a></div>';
+      '<button class="btn btn-secondary" id="showSupportEmail" style="margin-top:10px">Contactar Soporte</button>' +
+      '<div id="supportEmailBox" hidden style="margin-top:10px;gap:8px;align-items:center;background:hsl(var(--secondary));border:1px solid hsl(var(--border));border-radius:var(--radius);padding:12px 14px">' +
+      '<span style="flex:1;font-size:13.5px;word-break:break-all">' + esc(CONFIG.SUPPORT_EMAIL) + '</span>' +
+      '<button class="btn-ghost" id="copySupportEmail" style="flex:none;font-size:12px">Copiar</button></div></div>';
     html += '<div class="info-sec"><h3>Instalá la app en tu celular</h3><p>Accedé más rápido sin buscar el link cada vez. Se ve y funciona como una app real.</p>' +
       '<div class="tabs-row" style="margin-top:12px"><div class="tab-btn sel" data-os="ios">📱 iPhone</div><div class="tab-btn" data-os="android">🤖 Android</div></div>' +
       '<div id="pwaSteps"></div></div>';
     html += '<p class="quote">"' + esc(CONFIG.INFO_QUOTE) + '"</p>';
     view.innerHTML = html;
+
+    // "Contactar Soporte": muchos celulares no tienen una app de mail
+    // configurada y el link mailto: no hace nada (falla en silencio). Por
+    // eso, en vez de un link, mostramos el mail como texto + botón copiar.
+    document.getElementById('showSupportEmail').onclick = () => {
+      const box = document.getElementById('supportEmailBox');
+      box.hidden = false;
+      box.style.display = 'flex';
+    };
+    document.getElementById('copySupportEmail').onclick = () => {
+      const btn = document.getElementById('copySupportEmail');
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+      function marcarCopiado() { btn.textContent = '✓ Copiado'; setTimeout(() => { btn.textContent = 'Copiar'; }, 1500); }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(CONFIG.SUPPORT_EMAIL).then(marcarCopiado).catch(() => { fallbackCopy(CONFIG.SUPPORT_EMAIL); marcarCopiado(); });
+      } else {
+        fallbackCopy(CONFIG.SUPPORT_EMAIL); marcarCopiado();
+      }
+    };
 
     const stepsIOS = [
       ['🧭', 'Abrí esta página en Safari', 'No funciona desde Chrome ni otros navegadores'],

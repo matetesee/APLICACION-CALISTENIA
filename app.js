@@ -16,6 +16,10 @@
     bono5: 'forja_bono5',
     bono6: 'forja_bono6',
     recipesSaved: 'forja_recipes_saved',
+    profile: 'forja_profile',
+    streak: 'forja_streak',
+    achievements: 'forja_achievements',
+    progressPhotos: 'forja_progress_photos',
   };
   function load(key, fallback) {
     try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
@@ -25,10 +29,253 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function pad2(n) { return String(n).padStart(2, '0'); }
   function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  // Diferencia en días de calendario entre dos 'YYYY-MM-DD' (b - a).
+  function daysBetween(a, b) {
+    const da = new Date(a + 'T00:00:00'), db = new Date(b + 'T00:00:00');
+    return Math.round((db - da) / 86400000);
+  }
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const DIAS_SEM = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
+  // ===== foto: elegir archivo + redimensionar a un data URL chico =====
+  // (localStorage tiene ~5-10MB de límite total, así que las fotos que suba
+  // el usuario se comprimen a un cuadrado chico antes de guardarse).
+  function pickImageFile() {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.onchange = () => resolve(input.files && input.files[0] ? input.files[0] : null);
+      input.click();
+    });
+  }
+  function resizeImageFile(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+          const canvas = document.createElement('canvas');
+          canvas.width = maxSize; canvas.height = maxSize;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+          resolve(canvas.toDataURL('image/jpeg', quality || .82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   const view = document.getElementById('view');
+
+  // ============================================================
+  // PERFIL, RACHA Y LOGROS
+  // ============================================================
+
+  // Header persistente (foto + nombre + racha), visible arriba en las 4
+  // pestañas. Se vuelve a pintar al principio de cada render*() de pestaña
+  // y cada vez que cambia algo (foto, nombre, racha).
+  function renderTopHeader() {
+    const header = document.getElementById('topHeader');
+    if (!header) return;
+    const profile = load(LS.profile, { name: '', photo: '' });
+    const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
+    const today = todayStr();
+    // Si pasó más de 1 día de calendario sin marcar nada, la racha ya está
+    // rota visualmente (aunque el número viejo siga guardado hasta la
+    // próxima acción real).
+    const displayStreak = streak.lastDate && daysBetween(streak.lastDate, today) <= 1 ? streak.count : 0;
+    header.innerHTML =
+      '<div class="avatar-circle" id="hdrAvatar">' + (profile.photo ? '<img src="' + profile.photo + '" alt="">' : '🙂') + '</div>' +
+      '<div class="top-header-name" id="hdrName"><b>Hola, ' + (profile.name ? esc(profile.name) : 'Recluta') + ' 👋</b><span>Bienvenido de nuevo</span></div>' +
+      '<button class="streak-pill" id="hdrStreak" title="Compartir mi racha">🔥 ' + displayStreak + '</button>';
+    document.getElementById('hdrAvatar').onclick = async () => {
+      const file = await pickImageFile();
+      if (!file) return;
+      const dataUrl = await resizeImageFile(file, 200, .85);
+      const p = load(LS.profile, { name: '', photo: '' });
+      p.photo = dataUrl; save(LS.profile, p);
+      renderTopHeader();
+    };
+    document.getElementById('hdrName').onclick = () => openProfileModal(false);
+    document.getElementById('hdrStreak').onclick = shareProgress;
+  }
+
+  // Modal para elegir nombre + foto. isOnboarding=true la primera vez que se
+  // abre la app (bloquea hasta completar); false cuando se reabre a mano
+  // tocando el nombre en el header, para editar.
+  function openProfileModal(isOnboarding) {
+    const profile = load(LS.profile, { name: '', photo: '' });
+    let tempPhoto = profile.photo || '';
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = '<div class="modal-box" style="text-align:center">' +
+      (isOnboarding ? '' : '<div class="modal-top" style="justify-content:flex-end"><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>') +
+      '<h2 style="font-size:19px;text-transform:uppercase;margin-bottom:6px">' + (isOnboarding ? '¡Bienvenido, Recluta!' : 'Editar Perfil') + '</h2>' +
+      '<p style="color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:18px">' + (isOnboarding ? 'Antes de arrancar, contanos quién sos.' : 'Actualizá tu nombre o tu foto.') + '</p>' +
+      '<div class="avatar-picker" id="pAvatar">' + (tempPhoto ? '<img src="' + tempPhoto + '" alt="">' : '📷') + '</div>' +
+      '<div class="field" style="text-align:left"><label>Tu nombre</label><input type="text" id="pName" placeholder="Ej: Mateo" value="' + esc(profile.name || '') + '" maxlength="24"></div>' +
+      '<button class="btn btn-primary" id="pSave"' + (profile.name ? '' : ' disabled') + '>' + (isOnboarding ? 'Continuar →' : 'Guardar') + '</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    const nameInput = overlay.querySelector('#pName');
+    const saveBtn = overlay.querySelector('#pSave');
+    nameInput.oninput = () => { saveBtn.disabled = !nameInput.value.trim(); };
+    overlay.querySelector('#pAvatar').onclick = async () => {
+      const file = await pickImageFile();
+      if (!file) return;
+      tempPhoto = await resizeImageFile(file, 200, .85);
+      overlay.querySelector('#pAvatar').innerHTML = '<img src="' + tempPhoto + '" alt="">';
+    };
+    const closeBtn = overlay.querySelector('#mClose');
+    if (closeBtn) closeBtn.onclick = () => overlay.remove();
+    saveBtn.onclick = () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+      save(LS.profile, { name, photo: tempPhoto });
+      overlay.remove();
+      renderTopHeader();
+      if (isOnboarding) render();
+    };
+    setTimeout(() => nameInput.focus(), 50);
+  }
+
+  // Racha: se llama cada vez que se marca un día como completado (sin
+  // importar cuál de los 63 días del programa sea). Si ya se había marcado
+  // algo hoy no suma de nuevo; si el último día activo fue ayer, suma 1; si
+  // se saltó uno o más días, arranca de nuevo en 1.
+  function registerActivityToday() {
+    const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
+    const today = todayStr();
+    if (streak.lastDate === today) return streak;
+    if (streak.lastDate && daysBetween(streak.lastDate, today) === 1) streak.count += 1;
+    else streak.count = 1;
+    streak.lastDate = today;
+    streak.best = Math.max(streak.best || 0, streak.count);
+    save(LS.streak, streak);
+    return streak;
+  }
+
+  // Revisa CONFIG.ACHIEVEMENTS contra el progreso actual y desbloquea los
+  // que correspondan (quedan desbloqueados para siempre, no se revocan).
+  function checkAchievements() {
+    const progress = load(LS.progress, { completedDays: [] });
+    const totalDone = new Set(progress.completedDays).size;
+    const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
+    const photos = load(LS.progressPhotos, { d1: null, d32: null, d63: null });
+    const hasPhoto = !!(photos.d1 || photos.d32 || photos.d63);
+    const unlocked = new Set(load(LS.achievements, []));
+    const fresh = [];
+    CONFIG.ACHIEVEMENTS.forEach(a => {
+      if (unlocked.has(a.id)) return;
+      let ok = false;
+      if (a.type === 'totalDone') ok = totalDone >= a.value;
+      else if (a.type === 'streakBest') ok = (streak.best || 0) >= a.value;
+      else if (a.type === 'photo') ok = hasPhoto;
+      if (ok) { unlocked.add(a.id); fresh.push(a); }
+    });
+    if (fresh.length) { save(LS.achievements, [...unlocked]); fresh.forEach(showAchievementToast); }
+    return fresh;
+  }
+
+  function showAchievementToast(ach) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;left:50%;top:14px;transform:translate(-50%,-20px);opacity:0;transition:all .35s ease;background:hsl(var(--card));border:1px solid hsl(var(--primary));border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:10px;z-index:60;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);max-width:90%';
+    t.innerHTML = '<span style="font-size:26px">' + ach.icon + '</span><div><b style="display:block;font-size:12px;color:hsl(var(--primary));text-transform:uppercase;letter-spacing:.04em">Logro desbloqueado</b><span style="font-size:13.5px;font-weight:700">' + esc(ach.title) + '</span></div>';
+    document.body.appendChild(t);
+    requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%,-20px)'; setTimeout(() => t.remove(), 400); }, 3200);
+  }
+
+  // Comparte (o copia si el navegador no soporta compartir nativo) un
+  // resumen de la racha + progreso actual.
+  function shareProgress() {
+    const progress = load(LS.progress, { completedDays: [] });
+    const totalDone = new Set(progress.completedDays).size;
+    const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
+    const today = todayStr();
+    const displayStreak = streak.lastDate && daysBetween(streak.lastDate, today) <= 1 ? streak.count : 0;
+    const text = '🔥 Llevo ' + displayStreak + ' día' + (displayStreak === 1 ? '' : 's') + ' de racha entrenando con ' + CONFIG.BRAND + '. ¡Ya completé ' + totalDone + ' de 63 días de mi transformación! 💪';
+    function fallbackCopy(txt) {
+      const ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => alert('¡Copiado! Pegalo donde quieras compartirlo.')).catch(() => { fallbackCopy(text); alert('¡Copiado! Pegalo donde quieras compartirlo.'); });
+    } else {
+      fallbackCopy(text); alert('¡Copiado! Pegalo donde quieras compartirlo.');
+    }
+  }
+
+  function openBadgeModal(ach, unlocked) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = '<div class="modal-box" style="text-align:center">' +
+      '<div class="modal-top" style="justify-content:flex-end"><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
+      '<div style="font-size:52px' + (unlocked ? '' : ';opacity:.35;filter:grayscale(1)') + '">' + ach.icon + '</div>' +
+      '<h2 style="font-size:18px;text-transform:uppercase;margin:10px 0 6px">' + esc(ach.title) + '</h2>' +
+      '<p style="color:hsl(var(--muted-foreground));font-size:13.5px;margin-bottom:14px">' + esc(ach.desc) + '</p>' +
+      '<span class="pill ' + (unlocked ? 'completo' : 'pendiente') + '">' + (unlocked ? 'DESBLOQUEADO' : 'BLOQUEADO') + '</span>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#mClose').onclick = () => overlay.remove();
+  }
+
+  // Fotos de progreso: 3 casilleros (día 1 / 32 / 63). Al tener día 1 y día
+  // 63 muestra la comparación antes/después.
+  function openProgressPhotosModal() {
+    const photos = load(LS.progressPhotos, { d1: null, d32: null, d63: null });
+    const defs = [['d1', 'Día 1'], ['d32', 'Día 32 (mitad)'], ['d63', 'Día 63 (final)']];
+    function slotsHtml() {
+      return '<div class="photo-slot-row">' + defs.map(([k, lbl]) => {
+        const src = photos[k];
+        return '<div class="photo-slot' + (src ? ' filled' : '') + '" data-k="' + k + '">' + (src ? '<img src="' + src + '" alt="">' : '') + '<span class="lbl">' + (src ? lbl : '📷<br>' + lbl) + '</span></div>';
+      }).join('') + '</div>';
+    }
+    function compareHtml() {
+      if (!photos.d1 || !photos.d63) return '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:12.5px;margin-top:6px">Subí la foto del Día 1 y del Día 63 para ver tu comparación antes/después.</p>';
+      return '<h3 style="font-size:12px;letter-spacing:.05em;color:hsl(var(--primary));text-transform:uppercase;margin:18px 0 8px;text-align:center">Antes / Después</h3>' +
+        '<div style="display:flex;gap:10px">' +
+        '<div style="flex:1"><img src="' + photos.d1 + '" style="width:100%;border-radius:12px;display:block;aspect-ratio:3/4;object-fit:cover"><p style="text-align:center;font-size:11px;color:hsl(var(--muted-foreground));margin-top:4px">ANTES</p></div>' +
+        '<div style="flex:1"><img src="' + photos.d63 + '" style="width:100%;border-radius:12px;display:block;aspect-ratio:3/4;object-fit:cover"><p style="text-align:center;font-size:11px;color:hsl(var(--muted-foreground));margin-top:4px">DESPUÉS</p></div>' +
+        '</div>';
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = '<div class="modal-box">' +
+      '<div class="modal-top"><h2 style="font-size:17px;text-transform:uppercase">📸 Fotos de Progreso</h2><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
+      '<p style="color:hsl(var(--muted-foreground));font-size:12.5px;margin-bottom:4px">Tocá cada casillero para subir o reemplazar tu foto.</p>' +
+      '<div id="pSlots">' + slotsHtml() + '</div>' +
+      '<div id="pCompare">' + compareHtml() + '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#mClose').onclick = () => overlay.remove();
+    function bindSlots() {
+      overlay.querySelectorAll('.photo-slot').forEach(s => {
+        s.onclick = async () => {
+          const file = await pickImageFile();
+          if (!file) return;
+          const dataUrl = await resizeImageFile(file, 600, .82);
+          photos[s.dataset.k] = dataUrl;
+          save(LS.progressPhotos, photos);
+          overlay.querySelector('#pSlots').innerHTML = slotsHtml();
+          overlay.querySelector('#pCompare').innerHTML = compareHtml();
+          bindSlots();
+          checkAchievements();
+        };
+      });
+    }
+    bindSlots();
+  }
 
   // ===== generar los 63 días =====
   function buildDays() {
@@ -84,6 +331,7 @@
 
   // ================= HOME =================
   function renderHome() {
+    renderTopHeader();
     const quiz = load(LS.quiz, { step: 0, answers: {}, done: false });
     let html = '<div class="hero-badge"><span class="dot"></span>Reclutamiento Abierto</div>' +
       '<h1 class="brand-h1">' + esc(CONFIG.BRAND) + '</h1>' +
@@ -110,7 +358,8 @@
         '<button class="btn btn-secondary" id="undoDay" style="flex:1;font-size:12.5px"' + (totalDone === 0 ? ' disabled' : '') + '>↩ Volver 1 día atrás</button>' +
         '</div>' +
         '<div style="margin-bottom:8px">' + progressRingSVG(pct, totalDone, '/63') + '</div>' +
-        '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:22px">Has completado ' + totalDone + ' de 63 días</p>' +
+        '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:10px">Has completado ' + totalDone + ' de 63 días</p>' +
+        '<button class="btn btn-secondary" id="shareStreak" style="margin-bottom:22px">📤 Compartir mi racha</button>' +
         '<div class="card" style="text-align:center">' +
         '<span class="pill completo" style="margin-bottom:12px;display:inline-block">DÍA ' + todayNum + ' DE 63</span>' +
         '<h2 style="font-size:20px;text-transform:uppercase;margin-bottom:8px">' + esc(today.t) + '</h2>' +
@@ -136,8 +385,12 @@
         const p = load(LS.progress, { completedDays: [] });
         if (!p.completedDays.includes(todayNum)) p.completedDays.push(todayNum);
         save(LS.progress, p);
+        registerActivityToday();
+        checkAchievements();
         renderHome();
       };
+      const shareBtn = document.getElementById('shareStreak');
+      if (shareBtn) shareBtn.onclick = shareProgress;
       return;
     }
 
@@ -176,6 +429,7 @@
 
   // ================= PROGRAMA =================
   function renderPrograma() {
+    renderTopHeader();
     const progress = load(LS.progress, { completedDays: [] });
     const doneSet = new Set(progress.completedDays);
     const totalDone = doneSet.size;
@@ -249,6 +503,8 @@
       const p = load(LS.progress, { completedDays: [] });
       if (!p.completedDays.includes(num)) p.completedDays.push(num);
       save(LS.progress, p);
+      registerActivityToday();
+      checkAchievements();
       closeModal();
       render();
     };
@@ -258,17 +514,36 @@
   let bonoState = null;
   function renderTuPlan() {
     if (bonoState) return renderBonoDetail();
+    renderTopHeader();
+    const unlocked = new Set(load(LS.achievements, []));
     let html = '<div class="hero-badge"><span class="dot"></span>Contenido Premium</div>' +
       '<h1 class="brand-h1" style="font-size:22px">🎁 Bonos ' + esc(CONFIG.BRAND_SHORT) + '</h1>' +
       '<p class="brand-sub">Contenido premium exclusivo para tu transformación</p>';
+
+    html += '<h2 style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:hsl(var(--muted-foreground));margin:22px 0 2px">Tu Progreso Personal</h2>';
+    html += '<div class="badge-grid">' + CONFIG.ACHIEVEMENTS.map(a => {
+      const un = unlocked.has(a.id);
+      return '<div class="badge-cell' + (un ? '' : ' locked') + '" data-id="' + a.id + '"><div class="badge-ic">' + a.icon + '</div><div class="badge-label">' + esc(a.title) + '</div></div>';
+    }).join('') + '</div>';
+    html += '<button class="bono-card" id="openFotos"><div class="bono-num">📸</div>' +
+      '<div><span class="tag">PERSONAL</span><div class="bono-title">FOTOS DE PROGRESO</div><div class="bono-desc">Subí tus fotos de antes/después y mirá tu transformación.</div></div></button>';
+
+    html += '<h2 style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:hsl(var(--muted-foreground));margin:24px 0 2px">Bonos Incluidos</h2>';
     CONFIG.BONOS.forEach(b => {
       html += '<button class="bono-card" data-n="' + b.n + '"><div class="bono-num">' + b.n + '</div>' +
         '<div><span class="tag">' + esc(b.type) + '</span><div class="bono-title">' + esc(b.title.toUpperCase()) + '</div><div class="bono-desc">' + esc(b.desc) + '</div></div></button>';
     });
     view.innerHTML = html;
-    view.querySelectorAll('.bono-card').forEach(c => {
+    view.querySelectorAll('.bono-card[data-n]').forEach(c => {
       c.onclick = () => { bonoState = { n: +c.dataset.n }; renderTuPlan(); };
     });
+    view.querySelectorAll('.badge-cell').forEach(c => {
+      c.onclick = () => {
+        const ach = CONFIG.ACHIEVEMENTS.find(a => a.id === c.dataset.id);
+        openBadgeModal(ach, unlocked.has(c.dataset.id));
+      };
+    });
+    document.getElementById('openFotos').onclick = openProgressPhotosModal;
   }
 
   function bonoHeader(title, sub) {
@@ -711,6 +986,7 @@
 
   // ================= INFO =================
   function renderInfo() {
+    renderTopHeader();
     let html = '<h1 style="font-size:22px;text-transform:uppercase">Info</h1>' +
       '<p style="color:hsl(var(--muted-foreground));font-size:13px;margin:4px 0 20px">Todo lo que necesitás saber sobre ' + esc(CONFIG.BRAND) + '</p>';
     html += '<div class="info-sec"><h3>¿Qué es ' + esc(CONFIG.BRAND) + '?</h3><p>' + esc(CONFIG.ABOUT_TEXT) + '</p></div>';
@@ -777,5 +1053,13 @@
     });
   }
 
-  render();
+  // Primer uso: todavía no hay nombre guardado -> pedimos perfil antes de
+  // mostrar el contenido. Si ya existe, arranca directo.
+  const initialProfile = load(LS.profile, { name: '', photo: '' });
+  if (!initialProfile.name) {
+    renderTopHeader();
+    openProfileModal(true);
+  } else {
+    render();
+  }
 })();

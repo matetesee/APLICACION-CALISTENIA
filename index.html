@@ -167,10 +167,39 @@ a{color:inherit;text-decoration:none}
 .quote{text-align:center;font-style:italic;color:hsl(var(--muted-foreground));font-size:13.5px;margin-top:24px;padding:16px;border-top:1px solid hsl(var(--border))}
 
 @media(min-width:521px){ #app{border-left:1px solid hsl(var(--border));border-right:1px solid hsl(var(--border))} body{background:hsl(var(--background))} }
+
+/* ===== header (perfil + racha) ===== */
+#topHeader{display:flex;align-items:center;gap:12px;padding:12px 18px;background:hsl(var(--card));border-bottom:1px solid hsl(var(--border));position:sticky;top:0;z-index:15}
+.avatar-circle{width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;background:hsl(var(--secondary));display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:2px solid hsl(var(--border))}
+.avatar-circle img{width:100%;height:100%;object-fit:cover;display:block}
+.top-header-name{flex:1;min-width:0}
+.top-header-name b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-header-name span{font-size:11px;color:hsl(var(--muted-foreground))}
+.streak-pill{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;background:hsla(var(--primary)/.15);color:hsl(var(--primary));font-weight:800;font-size:13px;flex:none;border:none;cursor:pointer;font-family:inherit}
+
+/* ===== onboarding / editar perfil ===== */
+.avatar-picker{width:84px;height:84px;border-radius:50%;margin:0 auto 16px;background:hsl(var(--secondary));display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;border:2px dashed hsl(var(--border));overflow:hidden;position:relative}
+.avatar-picker img{width:100%;height:100%;object-fit:cover;display:block}
+.field input[type="text"]{width:100%;padding:12px;border-radius:var(--radius);border:1px solid hsl(var(--border));background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:15px;margin-bottom:16px}
+
+/* ===== logros ===== */
+.badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 18px}
+.badge-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));cursor:pointer;text-align:center}
+.badge-cell.locked{opacity:.35;filter:grayscale(1)}
+.badge-ic{font-size:26px}
+.badge-label{font-size:9.5px;font-weight:700;line-height:1.2}
+
+/* ===== fotos de progreso ===== */
+.photo-slot-row{display:flex;gap:10px;margin:14px 0}
+.photo-slot{flex:1;aspect-ratio:3/4;border-radius:12px;border:1.5px dashed hsl(var(--border));background:hsl(var(--secondary));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden;position:relative}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-slot .lbl{position:relative;z-index:1;font-size:11px;font-weight:700;color:hsl(var(--muted-foreground));text-align:center;padding:0 6px}
+.photo-slot.filled .lbl{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(0,0,0,.55);color:#fff;padding:2px 8px;border-radius:10px;white-space:nowrap}
 </style>
 </head>
 <body>
 <div id="app">
+  <div id="topHeader"></div>
   <main id="view"></main>
   <nav id="bottomNav">
     <a class="nav-link" data-path="/" href="/"><span class="ic">🏠</span>Home</a>

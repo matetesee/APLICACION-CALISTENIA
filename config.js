@@ -216,4 +216,20 @@ window.CONFIG = {
     "Descansá al menos 7 horas por noche", "No te saltes días – la constancia es clave", "Escuchá tu cuerpo, no fuerces al dolor",
   ],
   INFO_QUOTE: "La disciplina es el puente entre tus metas y tus resultados.",
+
+  // ---------- Logros (Mis Logros, dentro de Tu Plan) ----------
+  // "type" + "value" los interpreta checkAchievements() en app.js:
+  //   totalDone   -> días completados en total (progress.completedDays.size)
+  //   streakBest  -> racha más larga alcanzada (forja_streak.best)
+  //   photo       -> al menos 1 foto de progreso subida
+  ACHIEVEMENTS: [
+    { id: "primer_dia", icon: "🎖️", title: "Primer Paso", desc: "Completaste tu primer día de entrenamiento.", type: "totalDone", value: 1 },
+    { id: "primera_semana", icon: "🥉", title: "Primera Semana", desc: "7 días de entrenamiento completados.", type: "totalDone", value: 7 },
+    { id: "racha_7", icon: "🔥", title: "Racha de Fuego", desc: "7 días seguidos sin faltar.", type: "streakBest", value: 7 },
+    { id: "fase1_superada", icon: "⚔️", title: "Fase 1 Superada", desc: "Completaste toda la Fase 1: Fundamentos Pro.", type: "totalDone", value: 21 },
+    { id: "mitad_camino", icon: "🥈", title: "Mitad del Camino", desc: "32 de 63 días completados. Vas por la mitad.", type: "totalDone", value: 32 },
+    { id: "transformacion", icon: "📸", title: "Transformación Registrada", desc: "Subiste al menos una foto de tu progreso.", type: "photo", value: 1 },
+    { id: "racha_30", icon: "🌋", title: "Disciplina de Hierro", desc: "30 días seguidos sin faltar.", type: "streakBest", value: 30 },
+    { id: "mision_cumplida", icon: "🏆", title: "Misión Cumplida", desc: "Completaste los 63 días del programa.", type: "totalDone", value: 63 },
+  ],
 };

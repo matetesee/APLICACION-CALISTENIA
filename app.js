@@ -22,6 +22,7 @@
     progressPhotos: 'forja_progress_photos',
     theme: 'forja_theme',
     lang: 'forja_lang',
+    missionCelebrated: 'forja_mission_celebrated',
   };
   function load(key, fallback) {
     try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
@@ -67,6 +68,16 @@
       settings_dark: '🌙 Oscuro', settings_light: '☀️ Claro', settings_language: 'Idioma',
       settings_lang_note: 'Por ahora "English" también está listo. El resto de idiomas están en camino — avisale a soporte cuál necesitás primero.',
       lang_not_ready: 'Ese idioma todavía no está listo, ¡pronto!',
+      settings_backup_btn: '💾 Respaldar / restaurar progreso',
+      backup_title: '💾 Respaldo y Restauración', backup_hint: 'iOS guarda el progreso por separado entre Safari y la app instalada en tu pantalla de inicio. Generá un código acá y restauralo del otro lado para no perder nada.',
+      backup_generate_btn: 'Generar código de respaldo', backup_restore_label: 'Restaurar desde un código',
+      backup_paste_placeholder: 'Pegá acá tu código de respaldo', backup_restore_btn: 'Restaurar',
+      backup_restore_ok: '¡Listo! Tu progreso fue restaurado.', backup_restore_fail: 'Ese código no es válido. Revisalo y probá de nuevo.',
+      install_tip: '💡 Tip: si vas a instalarla en tu celular, hacelo ANTES de completar tu nombre y el test — así todo tu progreso queda guardado directamente ahí y no tenés que restaurar nada después.',
+      mission_title: '¡MISIÓN CUMPLIDA!', mission_sub: 'Completaste los 63 días del programa. Pocos llegan hasta acá — sos parte de un grupo reducido de gente que cumplió lo que empezó.',
+      mission_close_btn: 'Seguir', mission_share_btn: '📤 Compartir mi logro',
+      invite_heading: 'Invitá a un amigo', invite_sub: '¿Conocés a alguien que necesite un empujón como el tuyo? Mandale el link.',
+      invite_btn: '👥 Invitar a un amigo',
       gear_tooltip: 'Configuración', share_streak_tooltip: 'Compartir mi racha',
       greeting_prefix: 'Hola', welcome_back: 'Bienvenido de nuevo', recruit_default: 'Recluta',
       profile_welcome_title: '¡Bienvenido, Recluta!', profile_edit_title: 'Editar Perfil',
@@ -74,6 +85,9 @@
       profile_name_label: 'Tu nombre', profile_name_placeholder: 'Ej: Mateo', profile_continue: 'Continuar →', profile_save: 'Guardar',
       share_copied_alert: '¡Copiado! Pegalo donde quieras compartirlo.',
       achievement_unlocked_label: 'Logro desbloqueado', badge_unlocked: 'DESBLOQUEADO', badge_locked: 'BLOQUEADO',
+      freeze_earned_title: 'Comodín ganado', freeze_earned_desc: 'Tenés 1 día libre que no corta tu racha si te lo saltás.',
+      freeze_used_title: 'Racha protegida', freeze_used_desc: 'Usaste un comodín para no perder tu racha.',
+      freeze_available_line: '🧊 Tenés {n} comodín(es) de racha disponible(s)',
       photos_title: '📸 Fotos de Progreso', photos_day1: 'Día 1', photos_day32: 'Día 32 (mitad)', photos_day63: 'Día 63 (final)',
       photos_hint: 'Tocá cada casillero para subir o reemplazar tu foto.',
       photos_compare_hint: 'Subí la foto del Día 1 y del Día 63 para ver tu comparación antes/después.',
@@ -156,6 +170,16 @@
       settings_dark: '🌙 Dark', settings_light: '☀️ Light', settings_language: 'Language',
       settings_lang_note: 'For now "Español" is also ready. The rest of the languages are on the way — let support know which one you need first.',
       lang_not_ready: "That language isn't ready yet, coming soon!",
+      settings_backup_btn: '💾 Backup / restore progress',
+      backup_title: '💾 Backup & Restore', backup_hint: "iOS keeps your progress separate between Safari and the app installed on your home screen. Generate a code here and restore it on the other side so you don't lose anything.",
+      backup_generate_btn: 'Generate backup code', backup_restore_label: 'Restore from a code',
+      backup_paste_placeholder: 'Paste your backup code here', backup_restore_btn: 'Restore',
+      backup_restore_ok: 'Done! Your progress was restored.', backup_restore_fail: "That code isn't valid. Check it and try again.",
+      install_tip: '💡 Tip: if you\'re going to install it on your phone, do it BEFORE filling in your name and the test — that way all your progress is saved directly there and you won\'t need to restore anything later.',
+      mission_title: 'MISSION ACCOMPLISHED!', mission_sub: "You completed all 63 days of the program. Very few make it this far — you're part of a small group of people who finished what they started.",
+      mission_close_btn: 'Continue', mission_share_btn: '📤 Share my achievement',
+      invite_heading: 'Invite a friend', invite_sub: 'Know someone who needs a push like you got? Send them the link.',
+      invite_btn: '👥 Invite a friend',
       gear_tooltip: 'Settings', share_streak_tooltip: 'Share my streak',
       greeting_prefix: 'Hi', welcome_back: 'Welcome back', recruit_default: 'Recruit',
       profile_welcome_title: 'Welcome, Recruit!', profile_edit_title: 'Edit Profile',
@@ -352,6 +376,7 @@
     overlay.innerHTML = '<div class="modal-box">' +
       '<div class="modal-top"><h2 style="font-size:17px;text-transform:uppercase">' + t('settings_title') + '</h2><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
       '<button class="btn btn-secondary" id="sEditProfile" style="margin-bottom:10px">' + t('settings_edit_profile') + '</button>' +
+      '<button class="btn btn-secondary" id="sBackup" style="margin-bottom:10px">' + t('settings_backup_btn') + '</button>' +
       '<p class="settings-label">' + t('settings_appearance') + '</p>' +
       '<div class="seg-row">' +
       '<button class="seg-btn' + (theme !== 'light' ? ' sel' : '') + '" data-theme="dark">' + t('settings_dark') + '</button>' +
@@ -364,6 +389,7 @@
     document.body.appendChild(overlay);
     overlay.querySelector('#mClose').onclick = () => overlay.remove();
     overlay.querySelector('#sEditProfile').onclick = () => { overlay.remove(); openProfileModal(false); };
+    overlay.querySelector('#sBackup').onclick = () => { overlay.remove(); openBackupModal(); };
     overlay.querySelectorAll('.seg-btn').forEach(b => {
       b.onclick = () => { applyTheme(b.dataset.theme); overlay.remove(); openSettingsModal(); };
     });
@@ -375,6 +401,64 @@
         openSettingsModal();
       };
     });
+  }
+
+  // Respaldo/restauración: junta todas las claves forja_* en un JSON y lo
+  // codifica en base64 (soporta emojis/tildes vía encodeURIComponent). Sirve
+  // sobre todo para mover el progreso entre Safari y la app instalada en la
+  // pantalla de inicio de iOS, que en WebKit usan almacenamiento separado.
+  function exportBackupCode() {
+    const data = {};
+    Object.keys(LS).forEach(k => {
+      const key = LS[k];
+      const raw = localStorage.getItem(key);
+      if (raw != null) data[key] = raw;
+    });
+    return btoa(encodeURIComponent(JSON.stringify(data)));
+  }
+  function importBackupCode(code) {
+    try {
+      const data = JSON.parse(decodeURIComponent(atob(code.trim())));
+      Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+      return true;
+    } catch (e) { return false; }
+  }
+  function openBackupModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const boxStyle = 'width:100%;min-height:90px;padding:10px;border-radius:var(--radius);border:1px solid hsl(var(--border));background:hsl(var(--secondary));color:hsl(var(--foreground));font-size:11px;font-family:monospace;margin-bottom:10px';
+    overlay.innerHTML = '<div class="modal-box">' +
+      '<div class="modal-top"><h2 style="font-size:17px;text-transform:uppercase">' + t('backup_title') + '</h2><button class="btn-ghost" id="mClose" style="font-size:20px;line-height:1">✕</button></div>' +
+      '<p style="color:hsl(var(--muted-foreground));font-size:12.5px;margin-bottom:14px">' + t('backup_hint') + '</p>' +
+      '<button class="btn btn-secondary" id="genCode" style="margin-bottom:10px">' + t('backup_generate_btn') + '</button>' +
+      '<textarea id="codeBox" readonly style="' + boxStyle + ';display:none"></textarea>' +
+      '<button class="btn btn-secondary" id="copyCode" style="margin-bottom:20px;display:none">' + t('copy_btn') + '</button>' +
+      '<p class="settings-label">' + t('backup_restore_label') + '</p>' +
+      '<textarea id="restoreBox" placeholder="' + t('backup_paste_placeholder') + '" style="' + boxStyle + '"></textarea>' +
+      '<button class="btn btn-primary" id="doRestore">' + t('backup_restore_btn') + '</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#mClose').onclick = () => overlay.remove();
+    overlay.querySelector('#genCode').onclick = () => {
+      const box = overlay.querySelector('#codeBox');
+      box.value = exportBackupCode();
+      box.style.display = 'block';
+      overlay.querySelector('#copyCode').style.display = 'block';
+    };
+    overlay.querySelector('#copyCode').onclick = () => {
+      const box = overlay.querySelector('#codeBox');
+      const btn = overlay.querySelector('#copyCode');
+      box.select();
+      function done() { btn.textContent = t('copied_btn'); setTimeout(() => { btn.textContent = t('copy_btn'); }, 1500); }
+      if (navigator.clipboard) navigator.clipboard.writeText(box.value).then(done).catch(() => { try { document.execCommand('copy'); } catch (e) {} done(); });
+      else { try { document.execCommand('copy'); } catch (e) {} done(); }
+    };
+    overlay.querySelector('#doRestore').onclick = () => {
+      const val = overlay.querySelector('#restoreBox').value;
+      if (!val.trim()) return;
+      if (importBackupCode(val)) { alert(t('backup_restore_ok')); location.reload(); }
+      else alert(t('backup_restore_fail'));
+    };
   }
 
   // Modal para elegir nombre + foto. isOnboarding=true la primera vez que se
@@ -420,14 +504,40 @@
   // importar cuál de los 63 días del programa sea). Si ya se había marcado
   // algo hoy no suma de nuevo; si el último día activo fue ayer, suma 1; si
   // se saltó uno o más días, arranca de nuevo en 1.
+  // Hitos de racha que otorgan 1 comodín cada uno (coinciden con los
+  // logros racha_7 / racha_30 para que se sientan como el mismo camino).
+  const FREEZE_MILESTONES = [7, 30];
+  function defaultStreak() { return { count: 0, best: 0, lastDate: null, freezes: 0, freezeMilestones: [] }; }
+
   function registerActivityToday() {
-    const streak = load(LS.streak, { count: 0, best: 0, lastDate: null });
+    const streak = Object.assign(defaultStreak(), load(LS.streak, {}));
     const today = todayStr();
     if (streak.lastDate === today) return streak;
-    if (streak.lastDate && daysBetween(streak.lastDate, today) === 1) streak.count += 1;
-    else streak.count = 1;
+    if (streak.lastDate) {
+      const gap = daysBetween(streak.lastDate, today);
+      if (gap === 1) {
+        streak.count += 1;
+      } else if (gap === 2 && streak.freezes > 0) {
+        // Se saltó exactamente 1 día de calendario y tiene un comodín: se
+        // protege la racha en vez de resetearla.
+        streak.freezes -= 1;
+        streak.count += 1;
+        showToast('🧊', t('freeze_used_title'), t('freeze_used_desc'));
+      } else {
+        streak.count = 1;
+      }
+    } else {
+      streak.count = 1;
+    }
     streak.lastDate = today;
     streak.best = Math.max(streak.best || 0, streak.count);
+    FREEZE_MILESTONES.forEach(milestone => {
+      if (streak.best >= milestone && streak.freezeMilestones.indexOf(milestone) === -1) {
+        streak.freezeMilestones.push(milestone);
+        streak.freezes = (streak.freezes || 0) + 1;
+        showToast('🧊', t('freeze_earned_title'), t('freeze_earned_desc'));
+      }
+    });
     save(LS.streak, streak);
     return streak;
   }
@@ -450,17 +560,61 @@
       else if (a.type === 'photo') ok = hasPhoto;
       if (ok) { unlocked.add(a.id); fresh.push(a); }
     });
-    if (fresh.length) { save(LS.achievements, [...unlocked]); fresh.forEach(showAchievementToast); }
+    if (fresh.length) { save(LS.achievements, [...unlocked]); fresh.forEach(a => showToast(a.icon, t('achievement_unlocked_label'), a.title)); }
     return fresh;
   }
 
-  function showAchievementToast(ach) {
+  // Toast genérico (arriba, centrado, se desvanece solo) para logros y
+  // eventos de racha (comodín ganado/usado).
+  function showToast(icon, label, text) {
     const toastEl = document.createElement('div');
     toastEl.style.cssText = 'position:fixed;left:50%;top:14px;transform:translate(-50%,-20px);opacity:0;transition:all .35s ease;background:hsl(var(--card));border:1px solid hsl(var(--primary));border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:10px;z-index:60;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);max-width:90%';
-    toastEl.innerHTML = '<span style="font-size:26px">' + ach.icon + '</span><div><b style="display:block;font-size:12px;color:hsl(var(--primary));text-transform:uppercase;letter-spacing:.04em">' + t('achievement_unlocked_label') + '</b><span style="font-size:13.5px;font-weight:700">' + esc(ach.title) + '</span></div>';
+    toastEl.innerHTML = '<span style="font-size:26px">' + icon + '</span><div><b style="display:block;font-size:12px;color:hsl(var(--primary));text-transform:uppercase;letter-spacing:.04em">' + esc(label) + '</b><span style="font-size:13.5px;font-weight:700">' + esc(text) + '</span></div>';
     document.body.appendChild(toastEl);
     requestAnimationFrame(() => { toastEl.style.opacity = '1'; toastEl.style.transform = 'translate(-50%,0)'; });
     setTimeout(() => { toastEl.style.opacity = '0'; toastEl.style.transform = 'translate(-50%,-20px)'; setTimeout(() => toastEl.remove(), 400); }, 3200);
+  }
+
+  // Si se acaban de completar los 63 días (y todavía no se mostró la
+  // celebración), dispara la pantalla especial de "Misión Cumplida" en vez
+  // de dejar que pase como un logro más.
+  function checkMissionComplete() {
+    const progress = load(LS.progress, { completedDays: [] });
+    const totalDone = new Set(progress.completedDays).size;
+    if (totalDone >= 63 && !load(LS.missionCelebrated, false)) {
+      save(LS.missionCelebrated, true);
+      showMissionCompleteScreen();
+    }
+  }
+
+  function showMissionCompleteScreen() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.zIndex = '70';
+    overlay.innerHTML = '<div class="modal-box" style="text-align:center;overflow:visible;position:relative">' +
+      '<div id="confettiLayer" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:18px 18px 0 0"></div>' +
+      '<div style="font-size:64px;margin:10px 0">🏆</div>' +
+      '<h2 style="font-size:24px;color:hsl(var(--primary))">' + t('mission_title') + '</h2>' +
+      '<p style="color:hsl(var(--muted-foreground));font-size:13.5px;margin:12px 0 22px;line-height:1.5">' + t('mission_sub') + '</p>' +
+      '<button class="btn btn-secondary" id="missionShare" style="margin-bottom:10px">' + t('mission_share_btn') + '</button>' +
+      '<button class="btn btn-primary" id="missionClose">' + t('mission_close_btn') + '</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#missionClose').onclick = () => overlay.remove();
+    overlay.querySelector('#missionShare').onclick = shareProgress;
+    // Confetti chico hecho a mano con emojis cayendo (sin librerías externas).
+    const layer = overlay.querySelector('#confettiLayer');
+    const bits = ['🎉', '🎊', '🏅', '💪', '🔥'];
+    for (let i = 0; i < 36; i++) {
+      const span = document.createElement('span');
+      span.textContent = bits[i % bits.length];
+      const left = Math.random() * 100;
+      const delay = Math.random() * 1.2;
+      const duration = 2.2 + Math.random() * 1.4;
+      const size = 14 + Math.random() * 14;
+      span.style.cssText = 'position:absolute;top:-30px;left:' + left + '%;font-size:' + size + 'px;opacity:.9;animation:confettiFall ' + duration + 's linear ' + delay + 's 1;';
+      layer.appendChild(span);
+    }
   }
 
   // Comparte (o copia si el navegador no soporta compartir nativo) un
@@ -490,6 +644,25 @@
     } else {
       fallbackCopy(text); alert(t('share_copied_alert'));
     }
+  }
+
+  // Compartir para conseguir referidos (distinto del de la racha: este no
+  // habla de progreso personal, es una invitación directa a probar la app).
+  function inviteFriend() {
+    const refUrl = CONFIG.QUIZ_URL + (CONFIG.QUIZ_URL.indexOf('?') === -1 ? '?' : '&') + 'utm_source=app_referral';
+    const text = currentLang === 'en'
+      ? "💪 I've been training with " + CONFIG.BRAND + " and it's working. Want to try it too? 👉 " + refUrl
+      : '💪 Estoy entrenando con ' + CONFIG.BRAND + ' y me está funcionando. ¿Te copás a probarlo vos también? 👉 ' + refUrl;
+    function fallbackCopy(txt) {
+      const ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.share) navigator.share({ text }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => alert(t('share_copied_alert'))).catch(() => { fallbackCopy(text); alert(t('share_copied_alert')); });
+    else { fallbackCopy(text); alert(t('share_copied_alert')); }
   }
 
   function openBadgeModal(ach, unlocked) {
@@ -623,6 +796,7 @@
       const today = DAYS.find(d => d.num === todayNum);
       const phase = CONFIG.PHASES[currentPhaseIdx(todayNum)];
       const todayDone = doneSet.has(todayNum);
+      const streak = load(LS.streak, defaultStreak());
 
       html = '<h1 class="brand-h1">' + esc(CONFIG.BRAND) + '</h1>' +
         '<p class="brand-sub">' + esc(CONFIG.TAGLINE) + '</p>' +
@@ -635,6 +809,7 @@
         '</div>' +
         '<div style="margin-bottom:8px">' + progressRingSVG(pct, totalDone, '/63') + '</div>' +
         '<p style="text-align:center;color:hsl(var(--muted-foreground));font-size:13px;margin-bottom:10px">' + (currentLang === 'en' ? "You've completed " + totalDone + ' of 63 days' : 'Has completado ' + totalDone + ' de 63 días') + '</p>' +
+        (streak.freezes > 0 ? '<p style="text-align:center;color:hsl(var(--primary));font-size:12px;margin-bottom:10px">' + t('freeze_available_line').replace('{n}', streak.freezes) + '</p>' : '') +
         '<button class="btn btn-secondary" id="shareStreak" style="margin-bottom:22px">' + t('home_share_streak_btn') + '</button>' +
         '<div class="card" style="text-align:center">' +
         '<span class="pill completo" style="margin-bottom:12px;display:inline-block">' + (currentLang === 'en' ? 'DAY ' + todayNum + ' OF 63' : 'DÍA ' + todayNum + ' DE 63') + '</span>' +
@@ -664,6 +839,7 @@
         registerActivityToday();
         checkAchievements();
         renderHome();
+        checkMissionComplete();
       };
       const shareBtn = document.getElementById('shareStreak');
       if (shareBtn) shareBtn.onclick = shareProgress;
@@ -783,6 +959,7 @@
       checkAchievements();
       closeModal();
       render();
+      checkMissionComplete();
     };
   }
 
@@ -1278,7 +1455,10 @@
       '<div id="supportEmailBox" hidden style="margin-top:10px;gap:8px;align-items:center;background:hsl(var(--secondary));border:1px solid hsl(var(--border));border-radius:var(--radius);padding:12px 14px">' +
       '<span style="flex:1;font-size:13.5px;word-break:break-all">' + esc(CONFIG.SUPPORT_EMAIL) + '</span>' +
       '<button class="btn-ghost" id="copySupportEmail" style="flex:none;font-size:12px">' + t('copy_btn') + '</button></div></div>';
+    html += '<div class="info-sec"><h3>' + t('invite_heading') + '</h3><p>' + t('invite_sub') + '</p>' +
+      '<button class="btn btn-secondary" id="inviteFriendBtn" style="margin-top:10px">' + t('invite_btn') + '</button></div>';
     html += '<div class="info-sec"><h3>' + t('install_heading') + '</h3><p>' + t('install_sub') + '</p>' +
+      '<p style="font-size:12.5px;color:hsl(var(--primary));margin-top:10px">' + t('install_tip') + '</p>' +
       '<div class="tabs-row" style="margin-top:12px"><div class="tab-btn sel" data-os="ios">📱 iPhone</div><div class="tab-btn" data-os="android">🤖 Android</div></div>' +
       '<div id="pwaSteps"></div></div>';
     html += '<p class="quote">"' + esc(CONFIG.INFO_QUOTE) + '"</p>';
@@ -1287,6 +1467,7 @@
     // "Contactar Soporte": muchos celulares no tienen una app de mail
     // configurada y el link mailto: no hace nada (falla en silencio). Por
     // eso, en vez de un link, mostramos el mail como texto + botón copiar.
+    document.getElementById('inviteFriendBtn').onclick = inviteFriend;
     document.getElementById('showSupportEmail').onclick = () => {
       const box = document.getElementById('supportEmailBox');
       box.hidden = false;
